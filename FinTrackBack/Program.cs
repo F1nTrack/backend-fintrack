@@ -1,9 +1,15 @@
 // 1. AÑADE ESTOS USINGS AL INICIO
 using Microsoft.EntityFrameworkCore;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
+
 using FinTrackBack.Authentication.Infrastructure.Persistence.DbContext;
-using FinTrackBack.Authentication.Application.Interfaces; // <-- NUEVO
-using FinTrackBack.Authentication.Infrastructure.Security; // <-- NUEVO
+using FinTrackBack.Authentication.Application.Interfaces;
+using FinTrackBack.Authentication.Infrastructure.Security;
+
+
+// Documents
+using FinTrackBack.Documents.Domain.Interfaces;
+using FinTrackBack.Documents.Infrastructure.Persistence.Repositories;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +18,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// 🔹 Documents 
+builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<FinTrackBackDbContext>(options =>
@@ -28,6 +37,14 @@ builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
 var app = builder.Build();
+
+
+// CREA BD + TABLAS AL ARRANCAR
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<FinTrackBackDbContext>();
+    dbContext.Database.Migrate();
+}
 
 if (app.Environment.IsDevelopment())
 {

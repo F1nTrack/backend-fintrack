@@ -11,11 +11,15 @@ public class FinTrackBackDbContext : Microsoft.EntityFrameworkCore.DbContext
     }
     
     public DbSet<User> Users { get; set; }
+    public DbSet<Documents.Domain.Entities.Document> Documents { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        
+        modelBuilder.ApplyConfiguration(
+            new Documents.Infrastructure.Persistence.DbContext.DocumentConfiguration()
+        );
+
         // Aquí puedes agregar configuraciones de tablas en el futuro
     }
 }
