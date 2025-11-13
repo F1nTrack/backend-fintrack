@@ -7,6 +7,15 @@ using FinTrackBack.Authentication.Application.Interfaces;
 using FinTrackBack.Authentication.Infrastructure.Security;
 
 
+
+using FinTrackBack.Notifications.Domain.Interfaces;
+using FinTrackBack.Notifications.Infrastructure.Persistence.Repositories;
+
+using FinTrackBack.Support.Domain.Interfaces;
+using FinTrackBack.Support.Infrastructure.Persistence.Repositories;
+
+
+
 // Documents
 using FinTrackBack.Documents.Domain.Interfaces;
 using FinTrackBack.Documents.Infrastructure.Persistence.Repositories;
@@ -21,13 +30,30 @@ builder.Services.AddSwaggerGen();
 
 // 🔹 Documents 
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
+// 🔹 Notifications
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+
+// 🔹 Support Tickets
+builder.Services.AddScoped<ISupportTicketRepository, SupportTicketRepository>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var environment = builder.Environment.EnvironmentName;
+
 builder.Services.AddDbContext<FinTrackBackDbContext>(options =>
-    options.UseMySql(connectionString,
-        new MySqlServerVersion(new Version(8, 0, 21)), 
-        mySqlOptions => mySqlOptions.SchemaBehavior(MySqlSchemaBehavior.Ignore))
-);
+{
+    if (environment == "Development")
+    {
+        // Usar SQLite en desarrollo (más fácil, no requiere servidor MySQL)
+        options.UseSqlite(connectionString);
+    }
+    else
+    {
+        // Usar MySQL en producción
+        options.UseMySql(connectionString,
+            new MySqlServerVersion(new Version(8, 0, 21)), 
+            mySqlOptions => mySqlOptions.SchemaBehavior(MySqlSchemaBehavior.Ignore));
+    }
+});
 
 builder.Services.AddMediatR(cfg => 
     cfg.RegisterServicesFromAssembly(typeof(Program).Assembly)
