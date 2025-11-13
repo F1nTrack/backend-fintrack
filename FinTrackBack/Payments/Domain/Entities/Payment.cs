@@ -14,5 +14,8 @@
 
         // 👤 Relación con el usuario (GUID)
         public Guid UserId { get; set; }
+        
+        // 👤 Relación con el documento (GUID)
+        public Guid DocumentId { get; set; }
     }
 }

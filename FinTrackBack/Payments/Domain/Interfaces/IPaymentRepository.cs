@@ -11,6 +11,11 @@ namespace FinTrackBack.Payments.Domain.Interfaces
         /// Obtiene todos los pagos asociados a un usuario específico.
         /// </summary>
         Task<IEnumerable<Payment>> GetPaymentsByUserIdAsync(Guid userId);
+        
+        /// <summary>
+        /// Obtiene todos los pagos asociados a un usuario específico.
+        /// </summary>
+        Task<IEnumerable<Payment>> GetPaymentsByDocumentIdAsync(Guid docId);
 
         /// <summary>
         /// Crea un nuevo pago.

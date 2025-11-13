@@ -10,5 +10,7 @@
         public decimal Monto { get; set; }
         public DateTime Fecha { get; set; }
         public Guid UserId { get; set; } // 👈 Importante: debe ser Guid
+        
+        public Guid DocumentId { get; set; } 
     }
 }

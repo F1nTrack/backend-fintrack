@@ -23,6 +23,13 @@ namespace FinTrackBack.Payments.Infrastructure.Persistence.Repositories
                 .Where(p => p.UserId == userId)
                 .ToListAsync();
         }
+        
+        public async Task<IEnumerable<Payment>> GetPaymentsByDocumentIdAsync(Guid docId)
+        {
+            return await _context.Payments
+                .Where(p => p.UserId == docId)
+                .ToListAsync();
+        }
 
         public async Task<Payment> AddPaymentAsync(Payment payment)
         {
