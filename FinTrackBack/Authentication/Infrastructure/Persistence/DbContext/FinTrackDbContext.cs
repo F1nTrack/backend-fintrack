@@ -1,21 +1,28 @@
 ﻿using FinTrackBack.Authentication.Domain.Entities;
+using FinTrackBack.Payments.Domain.Entities; // 👈 referencia cruzada al módulo de pagos
 using Microsoft.EntityFrameworkCore;
 
-// Asegúrate de que el namespace sea EXACTAMENTE este.
-namespace FinTrackBack.Authentication.Infrastructure.Persistence.DbContext;
-
-public class FinTrackBackDbContext : Microsoft.EntityFrameworkCore.DbContext
+namespace FinTrackBack.Authentication.Infrastructure.Persistence.DbContext
 {
-    public FinTrackBackDbContext(DbContextOptions<FinTrackBackDbContext> options) : base(options)
+    public class FinTrackBackDbContext : Microsoft.EntityFrameworkCore.DbContext
     {
-    }
-    
-    public DbSet<User> Users { get; set; }
+        public FinTrackBackDbContext(DbContextOptions<FinTrackBackDbContext> options) : base(options)
+        {
+        }
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        base.OnModelCreating(modelBuilder);
-        
-        // Aquí puedes agregar configuraciones de tablas en el futuro
+        // 👤 Usuarios
+        public DbSet<User> Users { get; set; }
+
+        // 💳 Pagos (viene del módulo Payments)
+        public DbSet<Payment> Payments { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // Mapeo explícito (opcional)
+            modelBuilder.Entity<User>().ToTable("Users");
+            modelBuilder.Entity<Payment>().ToTable("Payments");
+        }
     }
 }
