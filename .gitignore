@@ -1,0 +1,11 @@
+# Bins and Objs (Archivos de compilación)
+**/bin/
+**/obj/
+
+# Rider/IDE
+/.idea/
+*.user
+
+# Archivos de SO
+.DS_Store
+Thumbs.db
