@@ -35,16 +35,11 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
+// 1. Controllers y Swagger
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-
-//SERVICIO DE ADICION
-builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
-// --- MODIFICACIÓN DE SWAGGER (PARA AÑADIR CANDADO DE AUTORIZACIÓN) ---
 builder.Services.AddSwaggerGen(options =>
 {
-    // 1. Definir la seguridad (Bearer)
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -52,10 +47,9 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "Bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Ingresa el token JWT obtenido en el login: 'Bearer {token}'"
+        Description = "Ingresa el token JWT: 'Bearer {token}'"
     });
 
-    // 2. Hacer que Swagger use esa definición
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -71,48 +65,30 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
-// --- FIN MODIFICACIÓN SWAGGER ---
 
-
-// --- CONEXIÓN A MYSQL (Existente) ---
-
+// 2. Repositorios
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
-
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
-
 builder.Services.AddScoped<ISupportTicketRepository, SupportTicketRepository>();
-
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 
-var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING")
-                       ?? builder.Configuration.GetConnectionString("FinTrackDatabase");
+// 3. Connection string
+var connectionString =
+    Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
+    ?? builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<FinTrackBackDbContext>(options =>
     options.UseMySql(
         connectionString,
         new MySqlServerVersion(new Version(8, 0, 21)),
-        mySqlOptions =>
-        {
-            mySqlOptions.EnableRetryOnFailure();
-        }
+        mysql => mysql.EnableRetryOnFailure()
     )
 );
 
-
-
-// --- PEGAMENTO DI (Existente) ---
-builder.Services.AddMediatR(cfg => 
-    cfg.RegisterServicesFromAssembly(typeof(Program).Assembly)
-);
-builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
-builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
-
-
-// --- NUEVO: AÑADIR SERVICIOS DE AUTENTICACIÓN JWT ---
+// 4. JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        // Le decimos a la API cómo validar el token
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -126,49 +102,34 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// Habilita el uso de [Authorize] en los controladores
 builder.Services.AddAuthorization();
-// --- FIN SERVICIOS NUEVOS ---
-
 
 var app = builder.Build();
 
+// Railway PORT
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 app.Urls.Add($"http://0.0.0.0:{port}");
 
+// MIGRACIONES — SOLO 1 VEZ
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<FinTrackBackDbContext>();
     dbContext.Database.Migrate();
 }
 
-
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-if (!app.Environment.IsProduction())
+else
 {
     app.UseHttpsRedirection();
 }
 
-// --- NUEVO: AÑADIR MIDDLEWARE DE AUTENTICACIÓN ---
-// ¡Importante! Deben ir ANTES de MapControllers.
-// Este "lee" el token en cada petición
 app.UseAuthentication();
-// Este "valida" el token si el endpoint tiene [Authorize]
 app.UseAuthorization();
-// --- FIN MIDDLEWARE NUEVO ---
-
 
 app.MapControllers();
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<FinTrackBackDbContext>();
-    db.Database.Migrate();
-}
-
 
 app.Run();
