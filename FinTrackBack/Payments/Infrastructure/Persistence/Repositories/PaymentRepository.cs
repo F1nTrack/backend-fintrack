@@ -1,7 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿
 using FinTrackBack.Payments.Domain.Entities;
 using FinTrackBack.Payments.Domain.Interfaces;
 using FinTrackBack.Authentication.Infrastructure.Persistence.DbContext;
+using Microsoft.EntityFrameworkCore;
 
 namespace FinTrackBack.Payments.Infrastructure.Persistence.Repositories
 {

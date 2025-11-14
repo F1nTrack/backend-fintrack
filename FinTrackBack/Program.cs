@@ -91,18 +91,7 @@ builder.Services.AddDbContext<FinTrackBackDbContext>(options =>
         new MySqlServerVersion(new Version(8, 0, 21)), 
         mySqlOptions => mySqlOptions.SchemaBehavior(MySqlSchemaBehavior.Ignore))
 );
-{
-    if (environment == "Development")
-    {
-        options.UseSqlite(connectionString);
-    }
-    else
-    {
-        options.UseMySql(connectionString,
-            new MySqlServerVersion(new Version(8, 0, 21)), 
-            mySqlOptions => mySqlOptions.SchemaBehavior(MySqlSchemaBehavior.Ignore));
-    }
-});
+
 
 // --- PEGAMENTO DI (Existente) ---
 builder.Services.AddMediatR(cfg => 
