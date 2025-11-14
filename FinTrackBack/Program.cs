@@ -90,7 +90,7 @@ var environment = builder.Environment.EnvironmentName;
 builder.Services.AddDbContext<FinTrackBackDbContext>(options =>
     options.UseMySql(connectionString,
         // ¡Importante! Asegúrate que esta versión coincida con tu MySQL
-        new MySqlServerVersion(new Version(8, 0, 21)), 
+        new MySqlServerVersion(new Version(8, 0, 44)), 
         mySqlOptions => mySqlOptions.SchemaBehavior(MySqlSchemaBehavior.Ignore))
 );
 

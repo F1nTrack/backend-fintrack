@@ -7,6 +7,7 @@ using FinTrackBack.Documents.Domain.Entities;
 using FinTrackBack.Documents.Infrastructure.Persistence.DbContext;
 using FinTrackBack.Notifications.Domain.Entities;
 using FinTrackBack.Notifications.Infrastructure.Persistence.DbContext;
+using FinTrackBack.Payments.Infrastructure.Persistence.DbContext;
 using FinTrackBack.Support.Domain.Entities;
 using FinTrackBack.Support.Infrastructure.Persistence.DbContext;
 using Microsoft.EntityFrameworkCore;
@@ -29,12 +30,11 @@ public class FinTrackBackDbContext : Microsoft.EntityFrameworkCore.DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        modelBuilder.ApplyConfiguration(
-            new Documents.Infrastructure.Persistence.DbContext.DocumentConfiguration()
-        );
+        modelBuilder.ApplyConfiguration(new DocumentConfiguration());
         // Mapeo explícito (opcional)
         modelBuilder.Entity<User>().ToTable("Users");
         modelBuilder.Entity<Payment>().ToTable("Payments");
+        modelBuilder.ApplyConfiguration(new PaymentConfiguration());
         modelBuilder.ApplyConfiguration(new NotificationConfiguration());   
         modelBuilder.ApplyConfiguration(new SupportTicketConfiguration());  
     }
