@@ -82,6 +82,8 @@ builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
 builder.Services.AddScoped<ISupportTicketRepository, SupportTicketRepository>();
 
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 var environment = builder.Environment.EnvironmentName;
 
