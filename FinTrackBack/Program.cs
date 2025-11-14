@@ -149,7 +149,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsProduction())
+{
+    app.UseHttpsRedirection();
+}
 
 // --- NUEVO: AÑADIR MIDDLEWARE DE AUTENTICACIÓN ---
 // ¡Importante! Deben ir ANTES de MapControllers.
