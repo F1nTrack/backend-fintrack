@@ -74,8 +74,9 @@ builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 
 // 3. Connection string
 var connectionString =
-    Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
+    Environment.GetEnvironmentVariable("CONNECTION_STRING")
     ?? builder.Configuration.GetConnectionString("DefaultConnection");
+
 
 builder.Services.AddDbContext<FinTrackBackDbContext>(options =>
     options.UseMySql(
