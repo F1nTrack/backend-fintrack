@@ -1,9 +1,25 @@
-// --- USINGS EXISTENTES ---
+
 using Microsoft.EntityFrameworkCore;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
+
 using FinTrackBack.Authentication.Infrastructure.Persistence.DbContext;
 using FinTrackBack.Authentication.Application.Interfaces;
 using FinTrackBack.Authentication.Infrastructure.Security;
+
+
+
+
+using FinTrackBack.Notifications.Domain.Interfaces;
+using FinTrackBack.Notifications.Infrastructure.Persistence.Repositories;
+
+using FinTrackBack.Support.Domain.Interfaces;
+using FinTrackBack.Support.Infrastructure.Persistence.Repositories;
+
+
+
+using FinTrackBack.Documents.Domain.Interfaces;
+using FinTrackBack.Documents.Infrastructure.Persistence.Repositories;
+
 
 
 // ---USING INYECTIONS
@@ -19,7 +35,7 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- SERVICIOS EXISTENTES ---
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
@@ -59,13 +75,34 @@ builder.Services.AddSwaggerGen(options =>
 
 
 // --- CONEXIÓN A MYSQL (Existente) ---
+
+builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
+
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+
+builder.Services.AddScoped<ISupportTicketRepository, SupportTicketRepository>();
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var environment = builder.Environment.EnvironmentName;
+
 builder.Services.AddDbContext<FinTrackBackDbContext>(options =>
     options.UseMySql(connectionString,
         // ¡Importante! Asegúrate que esta versión coincida con tu MySQL
         new MySqlServerVersion(new Version(8, 0, 21)), 
         mySqlOptions => mySqlOptions.SchemaBehavior(MySqlSchemaBehavior.Ignore))
 );
+{
+    if (environment == "Development")
+    {
+        options.UseSqlite(connectionString);
+    }
+    else
+    {
+        options.UseMySql(connectionString,
+            new MySqlServerVersion(new Version(8, 0, 21)), 
+            mySqlOptions => mySqlOptions.SchemaBehavior(MySqlSchemaBehavior.Ignore));
+    }
+});
 
 // --- PEGAMENTO DI (Existente) ---
 builder.Services.AddMediatR(cfg => 
@@ -100,7 +137,14 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// --- PIPELINE (Existente) ---
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<FinTrackBackDbContext>();
+    dbContext.Database.Migrate();
+}
+
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
