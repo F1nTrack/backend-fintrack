@@ -84,15 +84,20 @@ builder.Services.AddScoped<ISupportTicketRepository, SupportTicketRepository>();
 
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-var environment = builder.Environment.EnvironmentName;
+var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING")
+                       ?? builder.Configuration.GetConnectionString("FinTrackDatabase");
 
 builder.Services.AddDbContext<FinTrackBackDbContext>(options =>
-    options.UseMySql(connectionString,
-        // ¡Importante! Asegúrate que esta versión coincida con tu MySQL
-        new MySqlServerVersion(new Version(8, 0, 44)), 
-        mySqlOptions => mySqlOptions.SchemaBehavior(MySqlSchemaBehavior.Ignore))
+    options.UseMySql(
+        connectionString,
+        new MySqlServerVersion(new Version(8, 0, 21)),
+        mySqlOptions =>
+        {
+            mySqlOptions.EnableRetryOnFailure();
+        }
+    )
 );
+
 
 
 // --- PEGAMENTO DI (Existente) ---
@@ -154,5 +159,11 @@ app.UseAuthorization();
 
 
 app.MapControllers();
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<FinTrackBackDbContext>();
+    db.Database.Migrate();
+}
+
 
 app.Run();
