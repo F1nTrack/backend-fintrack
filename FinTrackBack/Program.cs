@@ -1,34 +1,89 @@
-// --- USINGS EXISTENTES ---
+// --------------------------
+// 📌 USINGS GENERALES
+// --------------------------
 using Microsoft.EntityFrameworkCore;
-using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
-using FinTrackBack.Authentication.Infrastructure.Persistence.DbContext;
-using FinTrackBack.Authentication.Application.Interfaces;
-using FinTrackBack.Authentication.Infrastructure.Security;
-
-
-// ---USING INYECTIONS
-using FinTrackBack.Payments.Domain.Interfaces;
-using FinTrackBack.Payments.Infrastructure.Persistence.Repositories;
-
-// --- USINGS NUEVOS PARA JWT Y SWAGGER ---
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
-// --- FIN USINGS NUEVOS ---
 
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
+
+using FinTrackBack.Authentication.Infrastructure.Persistence.DbContext;
+using FinTrackBack.Authentication.Application.Interfaces;
+using FinTrackBack.Authentication.Infrastructure.Security;
+
+using FinTrackBack.Payments.Domain.Interfaces;
+using FinTrackBack.Payments.Infrastructure.Persistence.Repositories;
+
+
+// --------------------------
+// 📌 BUILDER
+// --------------------------
 var builder = WebApplication.CreateBuilder(args);
 
-// --- SERVICIOS EXISTENTES ---
+
+// --------------------------
+// 📌 SERVICIOS BASE
+// --------------------------
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddOpenApi();
 
-//SERVICIO DE ADICION
+
+// --------------------------
+// 📌 REPOS / DI
+// --------------------------
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
-// --- MODIFICACIÓN DE SWAGGER (PARA AÑADIR CANDADO DE AUTORIZACIÓN) ---
+
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(typeof(Program).Assembly)
+);
+
+builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+
+
+// --------------------------
+// 📌 DATABASE: MYSQL
+// --------------------------
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+builder.Services.AddDbContext<FinTrackBackDbContext>(options =>
+{
+    options.UseMySQL(connectionString);
+});
+
+
+// --------------------------
+// 📌 JWT AUTHENTICATION
+// --------------------------
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+
+            ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+            ValidAudience = builder.Configuration["JwtSettings:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Secret"]!)
+            )
+        };
+    });
+
+builder.Services.AddAuthorization();
+
+
+// --------------------------
+// 📌 SWAGGER + JWT (Candadito)
+// --------------------------
 builder.Services.AddSwaggerGen(options =>
 {
-    // 1. Definir la seguridad (Bearer)
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -36,10 +91,9 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "Bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Ingresa el token JWT obtenido en el login: 'Bearer {token}'"
+        Description = "Ingresa el token: Bearer {TU_TOKEN}"
     });
 
-    // 2. Hacer que Swagger use esa definición
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -55,52 +109,24 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
-// --- FIN MODIFICACIÓN SWAGGER ---
 
 
-// --- CONEXIÓN A MYSQL (Existente) ---
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<FinTrackBackDbContext>(options =>
-    options.UseMySql(connectionString,
-        // ¡Importante! Asegúrate que esta versión coincida con tu MySQL
-        new MySqlServerVersion(new Version(8, 0, 21)), 
-        mySqlOptions => mySqlOptions.SchemaBehavior(MySqlSchemaBehavior.Ignore))
-);
-
-// --- PEGAMENTO DI (Existente) ---
-builder.Services.AddMediatR(cfg => 
-    cfg.RegisterServicesFromAssembly(typeof(Program).Assembly)
-);
-builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
-builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
-
-
-// --- NUEVO: AÑADIR SERVICIOS DE AUTENTICACIÓN JWT ---
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        // Le decimos a la API cómo validar el token
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
-            ValidAudience = builder.Configuration["JwtSettings:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Secret"]!))
-        };
-    });
-
-// Habilita el uso de [Authorize] en los controladores
-builder.Services.AddAuthorization();
-// --- FIN SERVICIOS NUEVOS ---
-
-
+// --------------------------
+// 📌 APP
+// --------------------------
 var app = builder.Build();
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<FinTrackBackDbContext>();
 
-// --- PIPELINE (Existente) ---
+    // ❗ Si la BD NO existe → la crea
+    context.Database.EnsureCreated();
+}
+
+// --------------------------
+// 📌 PIPELINE
+// --------------------------
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -109,14 +135,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// --- NUEVO: AÑADIR MIDDLEWARE DE AUTENTICACIÓN ---
-// ¡Importante! Deben ir ANTES de MapControllers.
-// Este "lee" el token en cada petición
-app.UseAuthentication();
-// Este "valida" el token si el endpoint tiene [Authorize]
-app.UseAuthorization();
-// --- FIN MIDDLEWARE NUEVO ---
-
+// ORDEN CORRECTO de auth:
+app.UseAuthentication();  // Lee el token
+app.UseAuthorization();   // Valida el token
 
 app.MapControllers();
 
