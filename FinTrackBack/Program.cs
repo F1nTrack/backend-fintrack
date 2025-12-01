@@ -89,7 +89,7 @@ builder.Services.AddDbContext<FinTrackBackDbContext>(options =>
 builder.Services.AddDbContext<FinTrackBackDbContext>(options =>
     options.UseMySql(
         connectionString,
-        new MySqlServerVersion(new Version(8, 0, 21)),
+        new MySqlServerVersion(new Version(8, 0, 0)),
         mysql => mysql.EnableRetryOnFailure()
     )
 );
