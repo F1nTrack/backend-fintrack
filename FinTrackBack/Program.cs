@@ -25,6 +25,8 @@ using FinTrackBack.Documents.Infrastructure.Persistence.Repositories;
 // ---USING INYECTIONS
 using FinTrackBack.Payments.Domain.Interfaces;
 using FinTrackBack.Payments.Infrastructure.Persistence.Repositories;
+using FinTrackBack.Authentication.Application.Features.Authentication.Register;
+using FinTrackBack.Authentication.Application.Features.Authentication.Login;
 
 // --- USINGS NUEVOS PARA JWT Y SWAGGER ---
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -112,6 +114,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
+
+
+
+// Registrar MediatR
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssembly(typeof(RegisterUserCommand).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(LoginUserQuery).Assembly);
+});
+
 
 var app = builder.Build();
 
