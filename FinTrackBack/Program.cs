@@ -126,6 +126,28 @@ using (var scope = app.Services.CreateScope())
     dbContext.Database.Migrate();
 }
 
+app.UseDeveloperExceptionPage();
+
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        context.Response.StatusCode = 500;
+        context.Response.ContentType = "application/json";
+
+        var error = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerPathFeature>();
+
+        if (error != null)
+        {
+            await context.Response.WriteAsync(Newtonsoft.Json.JsonConvert.SerializeObject(new
+            {
+                error = error.Error.Message,
+                stack = error.Error.StackTrace
+            }));
+        }
+    });
+});
+
 
 app.UseSwagger();
 app.UseSwaggerUI();
