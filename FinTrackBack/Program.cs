@@ -62,7 +62,7 @@ builder.Services.AddScoped<ISupportTicketRepository, SupportTicketRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
-
+builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
