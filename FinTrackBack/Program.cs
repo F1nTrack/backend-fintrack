@@ -1,4 +1,3 @@
-
 using Microsoft.EntityFrameworkCore;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 
@@ -6,38 +5,27 @@ using FinTrackBack.Authentication.Infrastructure.Persistence.DbContext;
 using FinTrackBack.Authentication.Application.Interfaces;
 using FinTrackBack.Authentication.Infrastructure.Security;
 
-
-
-
 using FinTrackBack.Notifications.Domain.Interfaces;
 using FinTrackBack.Notifications.Infrastructure.Persistence.Repositories;
 
 using FinTrackBack.Support.Domain.Interfaces;
 using FinTrackBack.Support.Infrastructure.Persistence.Repositories;
 
-
-
 using FinTrackBack.Documents.Domain.Interfaces;
 using FinTrackBack.Documents.Infrastructure.Persistence.Repositories;
 
-
-
-// ---USING INYECTIONS
 using FinTrackBack.Payments.Domain.Interfaces;
 using FinTrackBack.Payments.Infrastructure.Persistence.Repositories;
 using FinTrackBack.Authentication.Application.Features.Authentication.Register;
 using FinTrackBack.Authentication.Application.Features.Authentication.Login;
 
-// --- USINGS NUEVOS PARA JWT Y SWAGGER ---
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
-// --- FIN USINGS NUEVOS ---
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Controllers y Swagger
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -68,29 +56,24 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// 2. Repositorios
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<ISupportTicketRepository, SupportTicketRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 
-// 2.5 Registrar password hasher
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 
 
-// 3. Connection string
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 Console.WriteLine("Environment: " + builder.Environment.EnvironmentName);
 Console.WriteLine("Connection String: " + (connectionString ?? "EMPTY!"));
 
-// Validar si está vacío
 if (string.IsNullOrWhiteSpace(connectionString))
 {
     Console.WriteLine("❌ ERROR: La cadena de conexión está vacía o no se encontró.");
 }
 
-// AddDbContext CORRECTO — solo uno
 builder.Services.AddDbContext<FinTrackBackDbContext>(options =>
     options.UseMySql(
         connectionString,
@@ -119,8 +102,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-
-
 // Registrar MediatR
 builder.Services.AddMediatR(cfg =>
 {
@@ -128,14 +109,21 @@ builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(LoginUserQuery).Assembly);
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()   // Permite cualquier URL (localhost, etc.)
+              .AllowAnyMethod()   // Permite GET, POST, PUT, DELETE
+              .AllowAnyHeader();  // Permite headers como Authorization
+    });
+});
 
 var app = builder.Build();
 
-// Railway PORT
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 app.Urls.Add($"http://0.0.0.0:{port}");
 
-// MIGRACIONES — SOLO 1 VEZ
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<FinTrackBackDbContext>();
@@ -168,7 +156,7 @@ app.UseExceptionHandler(errorApp =>
 app.UseSwagger();
 app.UseSwaggerUI();
 
-
+app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();
