@@ -126,15 +126,11 @@ using (var scope = app.Services.CreateScope())
     dbContext.Database.Migrate();
 }
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-else
-{
-    app.UseHttpsRedirection();
-}
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
+
 
 app.UseAuthentication();
 app.UseAuthorization();
