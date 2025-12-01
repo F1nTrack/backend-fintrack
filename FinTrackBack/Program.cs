@@ -74,6 +74,10 @@ builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<ISupportTicketRepository, SupportTicketRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 
+// 2.5 Registrar password hasher
+builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+
+
 // 3. Connection string
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
