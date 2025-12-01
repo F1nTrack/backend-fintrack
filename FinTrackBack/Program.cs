@@ -76,23 +76,23 @@ builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 Console.WriteLine("Environment: " + builder.Environment.EnvironmentName);
-Console.WriteLine("Connection String: " + connectionString);
+Console.WriteLine("Connection String: " + (connectionString ?? "EMPTY!"));
 
+// Validar si está vacío
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    Console.WriteLine("❌ ERROR: La cadena de conexión está vacía o no se encontró.");
+}
+
+// AddDbContext CORRECTO — solo uno
 builder.Services.AddDbContext<FinTrackBackDbContext>(options =>
     options.UseMySql(
         connectionString,
-        ServerVersion.AutoDetect(connectionString)
-    ));
-
-
-
-builder.Services.AddDbContext<FinTrackBackDbContext>(options =>
-    options.UseMySql(
-        connectionString,
-        new MySqlServerVersion(new Version(8, 0, 0)),
+        new MySqlServerVersion(new Version(8, 0, 36)),   // compatible Railway
         mysql => mysql.EnableRetryOnFailure()
     )
 );
+
 
 // 4. JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
