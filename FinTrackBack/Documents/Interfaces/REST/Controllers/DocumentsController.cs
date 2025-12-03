@@ -26,7 +26,7 @@ namespace FinTrackBack.Documents.Interfaces.REST.Controllers
             return Ok(result);
         }
         
-        [HttpGet("api/[controller]/{userId}")]
+        [HttpGet("{userId}")]
         public async Task<ActionResult<List<DocumentDto>>> GetByUserId(Guid userId)
         {
             var query = new GetDocumentsByUserIdQuery(userId);
