@@ -14,6 +14,8 @@ namespace FinTrackBack.Documents.Domain.Entities
 
         public DocumentType Type { get; private set; }
         public DocumentStatus Status { get; private set; }
+        
+        public decimal? Balance { get; private set; }
 
         public DateTime IssueDate { get; private set; }
         public DateTime? ExpirationDate { get; private set; }
@@ -33,7 +35,8 @@ namespace FinTrackBack.Documents.Domain.Entities
             DocumentType type,
             DateTime issueDate,
             DateTime? expirationDate,
-            string? filePath
+            string? filePath,
+            decimal? balance
         )
         {
             Id = Guid.NewGuid();
@@ -46,6 +49,7 @@ namespace FinTrackBack.Documents.Domain.Entities
             ExpirationDate = expirationDate;
             FilePath = filePath;
             CreatedAt = DateTime.UtcNow;
+            Balance = balance;
         }
 
         public void Verify()

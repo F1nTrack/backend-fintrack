@@ -23,7 +23,8 @@ namespace FinTrackBack.Documents.Infrastructure.Persistence.DbContext
                 .IsRequired()
                 .HasMaxLength(200);
             
-         //   builder.Property(d => d.)
+            builder.Property(d => d.Balance)
+                .HasColumnType("decimal(18,2)");
 
 
             builder.Property(d => d.Type)

@@ -25,7 +25,8 @@ namespace FinTrackBack.Documents.Application.Features.CreateDocument
                 request.Type,
                 request.IssueDate,
                 request.ExpirationDate,
-                request.FilePath
+                request.FilePath,
+                request.Balance
             );
 
             await _documentRepository.AddAsync(document);
@@ -40,7 +41,9 @@ namespace FinTrackBack.Documents.Application.Features.CreateDocument
                 Status = document.Status,
                 IssueDate = document.IssueDate,
                 ExpirationDate = document.ExpirationDate,
-                FilePath = document.FilePath
+                FilePath = document.FilePath,
+                Balance = document.Balance
+                
             };
         }
     }

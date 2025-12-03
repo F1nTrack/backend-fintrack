@@ -1,6 +1,8 @@
 using System.Threading.Tasks;
 using FinTrackBack.Documents.Application.DTOs;
 using FinTrackBack.Documents.Application.Features.CreateDocument;
+using FinTrackBack.Documents.Application.Features.GetDocumentByUserId;
+
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -21,6 +23,15 @@ namespace FinTrackBack.Documents.Interfaces.REST.Controllers
         public async Task<ActionResult<DocumentDto>> Create([FromBody] CreateDocumentCommand command)
         {
             var result = await _mediator.Send(command);
+            return Ok(result);
+        }
+        
+        [HttpGet("api/[controller]/{userId}")]
+        public async Task<ActionResult<List<DocumentDto>>> GetByUserId(Guid userId)
+        {
+            var query = new GetDocumentsByUserIdQuery(userId);
+            var result = await _mediator.Send(query);
+
             return Ok(result);
         }
     }
