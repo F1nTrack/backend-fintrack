@@ -22,6 +22,9 @@ namespace FinTrackBack.Documents.Infrastructure.Persistence.DbContext
             builder.Property(d => d.FullName)
                 .IsRequired()
                 .HasMaxLength(200);
+            
+         //   builder.Property(d => d.)
+
 
             builder.Property(d => d.Type)
                 .IsRequired();

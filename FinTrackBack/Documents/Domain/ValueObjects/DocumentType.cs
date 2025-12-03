@@ -4,5 +4,7 @@ namespace FinTrackBack.Documents.Domain.ValueObjects;
         Dni = 1,
         CarnetExtranjeria = 2,
         Pasaporte = 3,
-        CarnetUniversitario = 4
+        CarnetUniversitario = 4,
+        TransportCard = 5
+        
     }

@@ -11,6 +11,8 @@ namespace FinTrackBack.Documents.Application.Features.CreateDocument
         public string DocumentNumber { get; set; } = default!;
         public string FullName { get; set; } = default!;
         public DocumentType Type { get; set; }
+        
+        public float Balance { get; set; }
         public DateTime IssueDate { get; set; }
         public DateTime? ExpirationDate { get; set; }
         public string? FilePath { get; set; }

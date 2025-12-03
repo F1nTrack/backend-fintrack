@@ -12,6 +12,8 @@ namespace FinTrackBack.Documents.Application.DTOs
         public string FullName { get; set; } = default!;
 
         public DocumentType Type { get; set; }
+        
+        public decimal? Balance { get; set; }
         public DocumentStatus Status { get; set; }
 
         public DateTime IssueDate { get; set; }
